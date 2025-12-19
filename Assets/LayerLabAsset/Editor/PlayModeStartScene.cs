@@ -16,27 +16,27 @@ namespace LayerLabAsset
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        [MenuItem("Tools/Force Start Scene/Enable")]
+        [MenuItem("LayerLabAsset/Force Start Scene/Enable")]
         private static void Enable()
         {
             EditorPrefs.SetBool(EnabledKey, true);
             UnityEngine.Debug.Log("Force Start Scene: Enabled");
         }
 
-        [MenuItem("Tools/Force Start Scene/Disable")]
+        [MenuItem("LayerLabAsset/Force Start Scene/Disable")]
         private static void Disable()
         {
             EditorPrefs.SetBool(EnabledKey, false);
             UnityEngine.Debug.Log("Force Start Scene: Disabled");
         }
 
-        [MenuItem("Tools/Force Start Scene/Enable", true)]
+        [MenuItem("LayerLabAsset/Force Start Scene/Enable", true)]
         private static bool EnableValidate()
         {
             return !EditorPrefs.GetBool(EnabledKey, false);
         }
 
-        [MenuItem("Tools/Force Start Scene/Disable", true)]
+        [MenuItem("LayerLabAsset/Force Start Scene/Disable", true)]
         private static bool DisableValidate()
         {
             return EditorPrefs.GetBool(EnabledKey, false);

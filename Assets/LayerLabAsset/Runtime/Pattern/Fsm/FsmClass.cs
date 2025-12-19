@@ -76,7 +76,7 @@ namespace LayerLabAsset
 
             //게임컨트롤 게임상태 변경
             GetState = nextState;
-
+응 
             //Chaning 완료 처리후 Enter 진입 (처리가 되지않아 Enter에서 상태바꿀시 에러가 남)
             _isStateChanging = false;
             GetState.Enter();

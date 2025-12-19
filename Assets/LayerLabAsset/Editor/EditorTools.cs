@@ -7,13 +7,13 @@ namespace LayerLabAsset
 {
     public class EditorTools : MonoBehaviour
     {
-        [MenuItem("PlayPrefabs/Reset")]
+        [MenuItem("LayerLabAsset/Reset PlayerPrefs")]
         static public void TestCode()
         {
             PlayerPrefs.DeleteAll();
         }
 
-        [MenuItem("Tools/Disable Raycast Target")]
+        [MenuItem("LayerLabAsset/Disable Raycast Target")]
         static public void DisableRaycastTarget()
         {
             GameObject[] selectedObjects = Selection.gameObjects;
