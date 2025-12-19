@@ -1,0 +1,19 @@
+{
+    "name": "LayerLabAsset.UI",
+    "rootNamespace": "LayerLabAsset",
+    "references": [
+        "LayerLabAsset",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "LAYERLAB_DOTWEEN"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

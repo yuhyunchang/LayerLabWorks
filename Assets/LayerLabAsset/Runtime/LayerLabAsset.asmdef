@@ -1,11 +1,7 @@
 {
     "name": "LayerLabAsset",
     "rootNamespace": "LayerLabAsset",
-    "references": [
-        "Unity.TextMeshPro",
-        "UniRx",
-        "DOTween.Modules"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -13,6 +9,22 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.neuecc.unirx",
+            "expression": "",
+            "define": "LAYERLAB_UNIRX"
+        },
+        {
+            "name": "UniRx",
+            "expression": "",
+            "define": "LAYERLAB_UNIRX"
+        },
+        {
+            "name": "com.demigiant.dotween",
+            "expression": "",
+            "define": "LAYERLAB_DOTWEEN"
+        }
+    ],
     "noEngineReferences": false
 }

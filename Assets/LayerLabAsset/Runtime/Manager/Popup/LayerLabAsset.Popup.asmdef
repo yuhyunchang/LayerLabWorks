@@ -1,0 +1,21 @@
+{
+    "name": "LayerLabAsset.Popup",
+    "rootNamespace": "LayerLabAsset",
+    "references": [
+        "LayerLabAsset",
+        "UniRx",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "LAYERLAB_UNIRX",
+        "LAYERLAB_DOTWEEN"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
