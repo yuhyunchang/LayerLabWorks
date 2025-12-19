@@ -1,0 +1,21 @@
+{
+  "name": "com.layerlab.asset",
+  "version": "1.0.0",
+  "displayName": "LayerLab Asset",
+  "description": "Unity utility package with Singleton, FSM, Popup Manager, and UI components",
+  "unity": "6000.0",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "license": "MIT",
+  "keywords": [
+    "singleton",
+    "fsm",
+    "popup",
+    "ui",
+    "utility"
+  ],
+  "author": {
+    "name": "LayerLab",
+    "url": ""
+  }
+}
