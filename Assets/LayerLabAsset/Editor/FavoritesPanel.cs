@@ -142,24 +142,6 @@ namespace LayerLabAsset
             float iconWidth = 20;
             float spacing = 2;
 
-            // X (Delete) button - leftmost
-            if (GUI.Button(new Rect(x, rect.y + 2, xButtonWidth, rect.height - 4), "X"))
-            {
-                EditorApplication.delayCall += () =>
-                {
-                    int idx = favoriteItems.IndexOf(item);
-                    if (idx >= 0)
-                    {
-                        favoriteItems.RemoveAt(idx);
-                        SaveFavorites();
-                        RebuildLists();
-                    }
-                };
-                return;
-            }
-
-            x += xButtonWidth + spacing;
-
             // Select button
             if (GUI.Button(new Rect(x, rect.y + 2, selectButtonWidth, rect.height - 4), "Select"))
             {
@@ -171,8 +153,23 @@ namespace LayerLabAsset
 
             if (asset == null)
             {
-                EditorGUI.LabelField(new Rect(x, rect.y, rect.width - x + rect.x, rect.height),
+                EditorGUI.LabelField(new Rect(x, rect.y, rect.width - x + rect.x - xButtonWidth - spacing, rect.height),
                     "[Missing] " + item.name);
+
+                // X (Delete) button - rightmost (for missing items too)
+                if (GUI.Button(new Rect(rect.x + rect.width - xButtonWidth, rect.y + 2, xButtonWidth, rect.height - 4), "X"))
+                {
+                    EditorApplication.delayCall += () =>
+                    {
+                        int idx = favoriteItems.IndexOf(item);
+                        if (idx >= 0)
+                        {
+                            favoriteItems.RemoveAt(idx);
+                            SaveFavorites();
+                            RebuildLists();
+                        }
+                    };
+                }
                 return;
             }
 
@@ -199,7 +196,7 @@ namespace LayerLabAsset
                 folderPath = "";
             }
 
-            float remainingWidth = rect.width - (x - rect.x);
+            float remainingWidth = rect.width - (x - rect.x) - xButtonWidth - spacing;
             Rect labelRect = new Rect(x, rect.y, remainingWidth, rect.height);
 
             // Click detection
@@ -227,6 +224,21 @@ namespace LayerLabAsset
             if (pathWidth > 0)
                 EditorGUI.LabelField(new Rect(x, rect.y, pathWidth, rect.height), pathText, pathStyle);
             EditorGUI.LabelField(new Rect(x + pathWidth, rect.y, remainingWidth - pathWidth, rect.height), item.name, nameStyle);
+
+            // X (Delete) button - rightmost
+            if (GUI.Button(new Rect(rect.x + rect.width - xButtonWidth, rect.y + 2, xButtonWidth, rect.height - 4), "X"))
+            {
+                EditorApplication.delayCall += () =>
+                {
+                    int idx = favoriteItems.IndexOf(item);
+                    if (idx >= 0)
+                    {
+                        favoriteItems.RemoveAt(idx);
+                        SaveFavorites();
+                        RebuildLists();
+                    }
+                };
+            }
         }
 
         private void OnGUI()
