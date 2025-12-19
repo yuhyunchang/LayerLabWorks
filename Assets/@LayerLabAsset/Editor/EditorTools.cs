@@ -1,8 +1,7 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 using UnityEditor;
-using System.Collections;
 using UnityEngine.UI;
-using TMPro;
 
 namespace LayerLabAsset
 {

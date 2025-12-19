@@ -83,7 +83,7 @@ namespace LayerLabAsset
         /// </summary>
         private PopupBase GetPopup(PopupType popupType)
         {
-            PopupBase p = Instantiate(Resources.Load($"{Path}{popupType}")).GetComponent<PopupBase>();
+            PopupBase p = Instantiate(Resources.Load<GameObject>($"{Path}{popupType}")).GetComponent<PopupBase>();
             p.transform.SetParent(transform, false);
             p.transform.SetAsFirstSibling();
             return p;

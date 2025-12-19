@@ -2,7 +2,8 @@
     "name": "LayerLabAsset.Editor",
     "rootNamespace": "LayerLabAsset",
     "references": [
-        "LayerLabAsset"
+        "LayerLabAsset",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"
