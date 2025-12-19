@@ -12,7 +12,8 @@ namespace LayerLabAsset
     /// </summary>
     public class FavoritesPanel : EditorWindow
     {
-        private const string PREFS_KEY = "FavoritesPanel_Data_V2";
+        private const string PREFS_KEY = "FavoritesPanel_Data_V2"; // Legacy - for migration
+        private static readonly string DATA_FILE_PATH = "UserSettings/FavoritesPanel.json";
 
         private List<FavoriteItem> favoriteItems = new List<FavoriteItem>();
         private List<FavoriteGroup> groups = new List<FavoriteGroup>();
@@ -631,8 +632,22 @@ namespace LayerLabAsset
         private void SaveFavorites()
         {
             var data = new FavoritesData { items = favoriteItems, groups = groups };
-            string json = JsonUtility.ToJson(data);
-            EditorPrefs.SetString(PREFS_KEY, json);
+            string json = JsonUtility.ToJson(data, true);
+
+            try
+            {
+                string directory = System.IO.Path.GetDirectoryName(DATA_FILE_PATH);
+                if (!System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                System.IO.File.WriteAllText(DATA_FILE_PATH, json);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to save favorites: {e.Message}");
+            }
         }
 
         private void LoadFavorites()
@@ -640,7 +655,30 @@ namespace LayerLabAsset
             favoriteItems.Clear();
             groups.Clear();
 
-            string json = EditorPrefs.GetString(PREFS_KEY, "");
+            string json = "";
+
+            // Try loading from local file first
+            if (System.IO.File.Exists(DATA_FILE_PATH))
+            {
+                try
+                {
+                    json = System.IO.File.ReadAllText(DATA_FILE_PATH);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to read favorites file: {e.Message}");
+                }
+            }
+            // Migrate from legacy EditorPrefs if local file doesn't exist
+            else if (EditorPrefs.HasKey(PREFS_KEY))
+            {
+                json = EditorPrefs.GetString(PREFS_KEY, "");
+                if (!string.IsNullOrEmpty(json))
+                {
+                    Debug.Log("FavoritesPanel: Migrating data from EditorPrefs to local file.");
+                }
+            }
+
             if (!string.IsNullOrEmpty(json))
             {
                 try
@@ -665,6 +703,12 @@ namespace LayerLabAsset
                                 favoriteItems.Add(item);
                             }
                         }
+                    }
+
+                    // Save to local file if migrated from EditorPrefs
+                    if (!System.IO.File.Exists(DATA_FILE_PATH) && (favoriteItems.Count > 0 || groups.Count > 0))
+                    {
+                        SaveFavorites();
                     }
                 }
                 catch (System.Exception e)
