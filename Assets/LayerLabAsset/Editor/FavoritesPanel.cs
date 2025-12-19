@@ -137,44 +137,12 @@ namespace LayerLabAsset
             var asset = AssetDatabase.LoadAssetAtPath<Object>(item.path);
 
             float x = rect.x;
-            float xButtonWidth = 22;
-            float selectButtonWidth = 45;
+            float deleteButtonWidth = 22;
             float iconWidth = 20;
             float spacing = 2;
 
-            // Select button
-            if (GUI.Button(new Rect(x, rect.y + 2, selectButtonWidth, rect.height - 4), "Select"))
-            {
-                if (asset != null)
-                    PingAssetInProject(asset);
-            }
-
-            x += selectButtonWidth + spacing;
-
-            if (asset == null)
-            {
-                EditorGUI.LabelField(new Rect(x, rect.y, rect.width - x + rect.x - xButtonWidth - spacing, rect.height),
-                    "[Missing] " + item.name);
-
-                // X (Delete) button - rightmost (for missing items too)
-                if (GUI.Button(new Rect(rect.x + rect.width - xButtonWidth, rect.y + 2, xButtonWidth, rect.height - 4), "X"))
-                {
-                    EditorApplication.delayCall += () =>
-                    {
-                        int idx = favoriteItems.IndexOf(item);
-                        if (idx >= 0)
-                        {
-                            favoriteItems.RemoveAt(idx);
-                            SaveFavorites();
-                            RebuildLists();
-                        }
-                    };
-                }
-                return;
-            }
-
             // Icon
-            var icon = AssetDatabase.GetCachedIcon(item.path);
+            var icon = asset != null ? AssetDatabase.GetCachedIcon(item.path) : null;
             if (icon != null)
             {
                 GUI.DrawTexture(new Rect(x, rect.y + 2, iconWidth, iconWidth), icon, ScaleMode.ScaleToFit);
@@ -182,7 +150,7 @@ namespace LayerLabAsset
 
             x += iconWidth + spacing;
 
-            // Path + Name (clickable)
+            // Path + Name area
             string folderPath = System.IO.Path.GetDirectoryName(item.path);
             if (!string.IsNullOrEmpty(folderPath))
             {
@@ -196,21 +164,55 @@ namespace LayerLabAsset
                 folderPath = "";
             }
 
-            float remainingWidth = rect.width - (x - rect.x) - xButtonWidth - spacing;
+            float remainingWidth = rect.width - (x - rect.x) - deleteButtonWidth - spacing;
             Rect labelRect = new Rect(x, rect.y, remainingWidth, rect.height);
 
-            // Click detection
-            if (Event.current.type == EventType.MouseDown && labelRect.Contains(Event.current.mousePosition))
+            // Event handling for label area
+            // - Single click: Select in project (ping)
+            // - Double click: Open asset
+            // - Right click: Context menu
+            // - Drag: Move between groups
+            if (labelRect.Contains(Event.current.mousePosition))
             {
-                if (Event.current.button == 0)
+                switch (Event.current.type)
                 {
-                    OpenOrSelectAsset(asset, item.path);
-                    Event.current.Use();
-                }
-                else if (Event.current.button == 1)
-                {
-                    ShowItemContextMenu(item);
-                    Event.current.Use();
+                    case EventType.MouseDown:
+                        if (Event.current.button == 0)
+                        {
+                            // Record for potential drag or click
+                            if (Event.current.clickCount == 2)
+                            {
+                                // Double click - open asset
+                                if (asset != null)
+                                    OpenOrSelectAsset(asset, item.path);
+                                Event.current.Use();
+                            }
+                            else
+                            {
+                                // Single click - select in project
+                                if (asset != null)
+                                    PingAssetInProject(asset);
+                                Event.current.Use();
+                            }
+                        }
+                        else if (Event.current.button == 1)
+                        {
+                            ShowItemContextMenu(item);
+                            Event.current.Use();
+                        }
+                        break;
+
+                    case EventType.MouseDrag:
+                        if (Event.current.button == 0)
+                        {
+                            // Start drag for group movement
+                            DragAndDrop.PrepareStartDrag();
+                            DragAndDrop.SetGenericData("FavoriteItem", item);
+                            DragAndDrop.objectReferences = asset != null ? new Object[] { asset } : new Object[0];
+                            DragAndDrop.StartDrag(item.name);
+                            Event.current.Use();
+                        }
+                        break;
                 }
             }
 
@@ -226,7 +228,7 @@ namespace LayerLabAsset
             EditorGUI.LabelField(new Rect(x + pathWidth, rect.y, remainingWidth - pathWidth, rect.height), item.name, nameStyle);
 
             // X (Delete) button - rightmost
-            if (GUI.Button(new Rect(rect.x + rect.width - xButtonWidth, rect.y + 2, xButtonWidth, rect.height - 4), "X"))
+            if (GUI.Button(new Rect(rect.x + rect.width - deleteButtonWidth, rect.y + 2, deleteButtonWidth, rect.height - 4), "X"))
             {
                 EditorApplication.delayCall += () =>
                 {
@@ -303,16 +305,16 @@ namespace LayerLabAsset
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-            // Ungrouped section header (for dropping items out of groups)
+            // Ungrouped section
+            Rect ungroupedSectionStart = GUILayoutUtility.GetRect(0, 0);
+
+            // Ungrouped section header
             Rect ungroupedHeader = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.Label("Ungrouped", EditorStyles.boldLabel);
             int ungroupedCount = favoriteItems.Count(x => string.IsNullOrEmpty(x.groupId));
             GUILayout.Label($"({ungroupedCount})", EditorStyles.miniLabel);
             GUILayout.FlexibleSpace();
             EditorGUILayout.EndHorizontal();
-
-            // Drop target for ungrouped
-            HandleDropToUngrouped(ungroupedHeader);
 
             // Draw ungrouped items
             if (ungroupedList != null && ungroupedList.count > 0)
@@ -323,6 +325,17 @@ namespace LayerLabAsset
             {
                 EditorGUILayout.LabelField("(Drag files here to add)", EditorStyles.centeredGreyMiniLabel);
             }
+
+            Rect ungroupedSectionEnd = GUILayoutUtility.GetRect(0, 0);
+
+            // Calculate full ungrouped section area for drop target
+            Rect ungroupedFullArea = new Rect(
+                ungroupedSectionStart.x,
+                ungroupedSectionStart.y,
+                position.width,
+                ungroupedSectionEnd.y - ungroupedSectionStart.y + 10
+            );
+            HandleDropToUngrouped(ungroupedFullArea);
 
             GUILayout.Space(10);
 
@@ -364,6 +377,9 @@ namespace LayerLabAsset
 
         private void DrawGroup(FavoriteGroup group)
         {
+            // Track group section start
+            Rect groupSectionStart = GUILayoutUtility.GetRect(0, 0);
+
             // Group header
             Rect headerRect = EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
@@ -392,9 +408,6 @@ namespace LayerLabAsset
 
             EditorGUILayout.EndHorizontal();
 
-            // Handle drop to group
-            HandleDropToGroup(headerRect, group);
-
             // Group content
             if (group.isExpanded)
             {
@@ -414,6 +427,17 @@ namespace LayerLabAsset
 
                 EditorGUI.indentLevel--;
             }
+
+            Rect groupSectionEnd = GUILayoutUtility.GetRect(0, 0);
+
+            // Calculate full group section area for drop target
+            Rect groupFullArea = new Rect(
+                groupSectionStart.x,
+                groupSectionStart.y,
+                position.width,
+                groupSectionEnd.y - groupSectionStart.y + 5
+            );
+            HandleDropToGroup(groupFullArea, group);
         }
 
         private void HandleDropToGroup(Rect dropArea, FavoriteGroup group)
@@ -703,16 +727,25 @@ namespace LayerLabAsset
 
                         if (data.items != null)
                         {
+                            bool hasRemovedMissing = false;
                             foreach (var item in data.items)
                             {
                                 string currentPath = AssetDatabase.GUIDToAssetPath(item.guid);
-                                if (!string.IsNullOrEmpty(currentPath))
+                                // Skip missing items (auto-remove)
+                                if (string.IsNullOrEmpty(currentPath))
                                 {
-                                    item.path = currentPath;
-                                    item.name = System.IO.Path.GetFileName(currentPath);
+                                    hasRemovedMissing = true;
+                                    continue;
                                 }
 
+                                item.path = currentPath;
+                                item.name = System.IO.Path.GetFileName(currentPath);
                                 favoriteItems.Add(item);
+                            }
+
+                            if (hasRemovedMissing)
+                            {
+                                Debug.Log("FavoritesPanel: Removed missing items from favorites.");
                             }
                         }
                     }

@@ -1,12 +1,87 @@
 ﻿using TMPro;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.PackageManager;
+using UnityEditor.PackageManager.Requests;
 using UnityEngine.UI;
 
 namespace LayerLabAsset
 {
     public class EditorTools : MonoBehaviour
     {
+        private const string PACKAGE_NAME = "com.layerlab.asset";
+        private static ListRequest _listRequest;
+        private static AddRequest _addRequest;
+
+        [MenuItem("LayerLabAsset/Update Package")]
+        static public void UpdatePackage()
+        {
+            Debug.Log("LayerLabAsset: Checking for updates...");
+            _listRequest = Client.List(true);
+            EditorApplication.update += OnListRequestComplete;
+        }
+
+        private static void OnListRequestComplete()
+        {
+            if (!_listRequest.IsCompleted)
+                return;
+
+            EditorApplication.update -= OnListRequestComplete;
+
+            if (_listRequest.Status == StatusCode.Failure)
+            {
+                Debug.LogError($"LayerLabAsset: Failed to get package list - {_listRequest.Error.message}");
+                return;
+            }
+
+            string packageUrl = null;
+            foreach (var package in _listRequest.Result)
+            {
+                if (package.name == PACKAGE_NAME)
+                {
+                    if (package.source == PackageSource.Git)
+                    {
+                        // packageId contains the git URL for git packages
+                        // Format: "com.layerlab.asset@https://github.com/..."
+                        string packageId = package.packageId;
+                        int atIndex = packageId.IndexOf('@');
+                        if (atIndex >= 0 && atIndex < packageId.Length - 1)
+                        {
+                            packageUrl = packageId.Substring(atIndex + 1);
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(packageUrl))
+            {
+                Debug.LogWarning("LayerLabAsset: Package is not installed from Git URL. Cannot auto-update.");
+                return;
+            }
+
+            Debug.Log($"LayerLabAsset: Updating from {packageUrl}...");
+            _addRequest = Client.Add(packageUrl);
+            EditorApplication.update += OnAddRequestComplete;
+        }
+
+        private static void OnAddRequestComplete()
+        {
+            if (!_addRequest.IsCompleted)
+                return;
+
+            EditorApplication.update -= OnAddRequestComplete;
+
+            if (_addRequest.Status == StatusCode.Failure)
+            {
+                Debug.LogError($"LayerLabAsset: Update failed - {_addRequest.Error.message}");
+            }
+            else
+            {
+                Debug.Log($"LayerLabAsset: Successfully updated to version {_addRequest.Result.version}");
+            }
+        }
+
         [MenuItem("LayerLabAsset/Reset PlayerPrefs")]
         static public void TestCode()
         {
