@@ -1,4 +1,6 @@
+#if DOTWEEN_EXISTS
 using DG.Tweening;
+#endif
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -81,11 +83,13 @@ namespace LayerLabAsset
 
             _isScaleReset = false;
 
+#if DOTWEEN_EXISTS
             if (IsScaleAnim)
             {
                 transform.transform.DOKill();
                 transform.transform.DOScale(_scaleValue, 0.1f).SetEase(Ease.OutCubic).SetUpdate(true);
             }
+#endif
 
             //이벤트 실행
             onDown?.Invoke();
@@ -97,12 +101,14 @@ namespace LayerLabAsset
         {
             base.OnPointerUp(eventData);
 
+#if DOTWEEN_EXISTS
             if (IsScaleAnim && !_isScaleReset)
             {
                 _isScaleReset = true;
                 transform.DOKill();
                 transform.DOScale(1f, 1f).SetEase(Ease.OutElastic).SetUpdate(true);
             }
+#endif
 
             onUp?.Invoke();
         }
@@ -140,12 +146,14 @@ namespace LayerLabAsset
             if (!interactable)
                 return;
 
+#if DOTWEEN_EXISTS
             if (IsScaleAnim && !_isScaleReset)
             {
                 _isScaleReset = true;
                 transform.DOKill();
                 transform.DOScale(1f, 1f).SetEase(Ease.OutElastic).SetUpdate(true);
             }
+#endif
 
             //이벤트 실행
             onExit?.Invoke();
@@ -156,7 +164,9 @@ namespace LayerLabAsset
         {
             base.OnDestroy();
             onClick.RemoveAllListeners();
+#if DOTWEEN_EXISTS
             transform.DOKill();
+#endif
         }
     }
 }

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+#if UNIRX_EXISTS
 using UniRx;
-using Unity.VisualScripting;
+#endif
 using UnityEngine;
 
 namespace LayerLabAsset
 {
-        
+
     public enum PopupSameType
     {
         UI,
@@ -15,26 +16,36 @@ namespace LayerLabAsset
         Ignore,
         Queue
     }
-    
+
     public enum PopupType
     {
     }
-    
+
     public class PopupManager : Singleton<PopupManager>
     {
         private const string Path = "_UI/Popup/";
+
+#if UNIRX_EXISTS
         public ReactiveCollection<PopupBase> popupSystem { get; set; } = new();
         public ReactiveCollection<PopupBase> popupUI { get; set; } = new ();
         public ReactiveCollection<PopupBase> popupIgnore { get; set; } = new ();
         public ReactiveCollection<PopupBase> popupQueue { get; set; } = new();
-        public bool IsNotOpenPopup => popupSystem.Count == 0 && popupUI.Count == 0 && popupIgnore.Count == 0 && popupQueue.Count == 0;
-        public bool IsNotOpenUiPopup => popupUI.Count == 0;
-        
+
         public IObservable<int> ObservableList => _observableList.Merge();
         private readonly List<IObservable<int>> _observableList = new();
-        
+#else
+        public List<PopupBase> popupSystem { get; set; } = new();
+        public List<PopupBase> popupUI { get; set; } = new ();
+        public List<PopupBase> popupIgnore { get; set; } = new ();
+        public List<PopupBase> popupQueue { get; set; } = new();
+#endif
+
+        public bool IsNotOpenPopup => popupSystem.Count == 0 && popupUI.Count == 0 && popupIgnore.Count == 0 && popupQueue.Count == 0;
+        public bool IsNotOpenUiPopup => popupUI.Count == 0;
+
         public void Init()
         {
+#if UNIRX_EXISTS
             //QueueCheck
             popupQueue.ObserveRemove().TakeUntilDestroy(this).Subscribe(_ =>
             {
@@ -47,6 +58,7 @@ namespace LayerLabAsset
             _observableList.Add(popupUI.ObserveCountChanged());
             _observableList.Add(popupIgnore.ObserveCountChanged());
             _observableList.Add(popupQueue.ObserveCountChanged());
+#endif
         }
 
         public PopupBase CreateOnlyLastPopup(PopupType popupType)
@@ -65,10 +77,10 @@ namespace LayerLabAsset
             // if (!isQueue)
             // {
             //     if (CheckAlreadyCreated(popupType))
-            //         return null;   
+            //         return null;
             // }
-            
-            
+
+
             PopupBase p = GetPopup(popupType); //팝업 게임오브젝트 생성해서 가져온다.
             p.PopupType = popupType; //생성 이후 팝업을 구분하기위한 enum값 설정
             CreatePopup(p, isShow, isQueue);
@@ -76,8 +88,8 @@ namespace LayerLabAsset
         }
 
 
-      
-        
+
+
         /// <summary>
         /// 팝업오브젝트 생성 가져오기
         /// </summary>
@@ -88,8 +100,8 @@ namespace LayerLabAsset
             p.transform.SetAsFirstSibling();
             return p;
         }
-        
-        
+
+
         private PopupBase CreatePopup(PopupBase popup, bool isShow, bool isQueue)
         {
             if (isShow)
@@ -106,7 +118,7 @@ namespace LayerLabAsset
                     popup.Show();
                 }
             }
-            
+
             if (isQueue)
             {
                 //큐에 넣어야하는경우
@@ -133,19 +145,19 @@ namespace LayerLabAsset
                 }
             }
 
-            
+
             return popup;
         }
 
-    
+
 
         private bool CheckAlreadyCreated(PopupType popupType)
         {
             return popupUI.Any(popupBase => popupBase.PopupType == popupType);
         }
-        
-        
-        
+
+
+
 
         public void CheckClosePopup()
         {
@@ -165,7 +177,7 @@ namespace LayerLabAsset
                 }
             }
         }
-    
+
         /// <summary>
         /// 지정한 타입의 모든패널을 삭제시킨다.
         /// </summary>
@@ -177,8 +189,8 @@ namespace LayerLabAsset
             for (var i = popupQueue.Count - 1; i >= 0 ; i--) RemoveList(PopupSameType.Queue, popupQueue[i]);
 
         }
-        
-        
+
+
         /// <summary>
         /// 지정한 타입의 모든패널을 삭제시킨다.
         /// </summary>
@@ -212,10 +224,10 @@ namespace LayerLabAsset
                 case PopupSameType.System: popupSystem.Remove(popup); break;
                 case PopupSameType.Queue: popupQueue.Remove(popup); break;
             }
-            
+
             popup.Close();
         }
-        
+
 
         /// <summary>
         /// 동일한 패널타입이 리스트에 존재하는지 확인한다.
@@ -223,7 +235,7 @@ namespace LayerLabAsset
         public void GetActivePopup(PopupType popupType, out PopupBase popup)
         {
             popup = null;
-        
+
             foreach (var t in popupUI)
             {
                 if (t.PopupType == popupType)
@@ -231,7 +243,7 @@ namespace LayerLabAsset
                     popup = t;
                 }
             }
-        
+
             foreach (var t in popupSystem)
             {
                 if (t.PopupType == popupType)
@@ -240,7 +252,7 @@ namespace LayerLabAsset
                 }
             }
         }
-    
+
         /// <summary>
         /// 동일한 패널타입이 리스트에 존재하는지 확인한다.
         /// </summary>
@@ -252,14 +264,14 @@ namespace LayerLabAsset
                 popup = t;
                 return;
             }
-        
+
             foreach (var t in popupSystem)
             {
                 if (t.PopupType != popupType) continue;
                 popup = t;
                 return;
             }
-            
+
             foreach (var t in popupIgnore)
             {
                 if (t.PopupType != popupType) continue;
@@ -269,7 +281,7 @@ namespace LayerLabAsset
 
             popup = null;
         }
-    
+
         /// <summary>
         /// 지정한 타입과 동일한 패널을 가져온다.
         /// </summary>
@@ -279,7 +291,7 @@ namespace LayerLabAsset
             {
                 if (t.PopupType == popupType) return t;
             }
-        
+
             foreach (var t in popupSystem)
             {
                 if (t.PopupType == popupType) return t;
@@ -306,26 +318,26 @@ namespace LayerLabAsset
 
             success = false;
         }
-    
-    
+
+
         public void CloseByPopupType(PopupType popupType)
         {
             foreach (var t in popupUI)
             {
                 if (t.PopupType == popupType) t.Close(); break;
             }
-        
+
             for (var i = 0; i < popupSystem.Count; i++)
             {
                 if (popupSystem[i].PopupType == popupType) popupSystem[i].Close(); break;
             }
-            
+
             foreach (var t in popupIgnore)
             {
                 if (t.PopupType == popupType) t.Close(); break;
             }
         }
-    
+
         public void RemovePopup(PopupBase popupBase)
         {
             switch (popupBase.PopupSameType)
@@ -338,5 +350,18 @@ namespace LayerLabAsset
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+#if !UNIRX_EXISTS
+        /// <summary>
+        /// UniRx 없이 Queue 팝업 처리
+        /// </summary>
+        private void OnQueuePopupRemoved()
+        {
+            if (popupQueue.Count > 0)
+            {
+                popupQueue[0].Show();
+            }
+        }
+#endif
     }
 }

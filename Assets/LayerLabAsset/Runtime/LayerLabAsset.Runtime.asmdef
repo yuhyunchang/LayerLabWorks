@@ -13,6 +13,20 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.neuecc.unirx",
+            "expression": "",
+            "define": "UNIRX_EXISTS"
+        },
+        {
+            "resource": "UniRx",
+            "define": "UNIRX_EXISTS"
+        },
+        {
+            "resource": "DOTween.Modules",
+            "define": "DOTWEEN_EXISTS"
+        }
+    ],
     "noEngineReferences": false
 }

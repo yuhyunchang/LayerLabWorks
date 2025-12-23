@@ -1,5 +1,7 @@
-using System;
+#if DOTWEEN_EXISTS
 using DG.Tweening;
+#endif
+using System;
 using UnityEngine;
 
 namespace LayerLabAsset
@@ -55,13 +57,18 @@ namespace LayerLabAsset
                             break;
                     }
 
+#if DOTWEEN_EXISTS
                     rect.DOAnchorPos(_targetPos, 0f).SetUpdate(true);
+#else
+                    rect.anchoredPosition = _targetPos;
+#endif
                 }
             }
         }
 
         public void OpenAnimation()
         {
+#if DOTWEEN_EXISTS
             if (isScale && rect)
             {
                 if (rectCloseButton) rectCloseButton.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true).SetDelay(0.1f);
@@ -87,14 +94,42 @@ namespace LayerLabAsset
                         _targetPos.x = 0;
                         break;
                 }
-          
+
                 rect.DOAnchorPos(_targetPos, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true);
             }
+#else
+            if (isScale && rect)
+            {
+                if (rectCloseButton) rectCloseButton.localScale = Vector3.one;
+                rect.localScale = Vector3.one;
+            }
+
+            if (isFade && _canvasGroup)
+            {
+                _canvasGroup.alpha = 1f;
+            }
+
+            if (panelMoveType != PanelMoveType.None)
+            {
+                switch (panelMoveType)
+                {
+                    case PanelMoveType.TopToBot:
+                    case PanelMoveType.BotToTop:
+                        _targetPos.y = 0;
+                        break;
+                    case PanelMoveType.LeftToRight:
+                    case PanelMoveType.RightToLeft:
+                        _targetPos.x = 0;
+                        break;
+                }
+
+                rect.anchoredPosition = _targetPos;
+            }
+#endif
         }
 
         public void CloseAnimation(Action action)
         {
-
 
             if (panelMoveType == PanelMoveType.None)
             {
@@ -119,6 +154,7 @@ namespace LayerLabAsset
                     break;
             }
 
+#if DOTWEEN_EXISTS
             if (rectCloseButton)
             {
                 rectCloseButton.DOScale(0f, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true);
@@ -126,13 +162,24 @@ namespace LayerLabAsset
 
             rect.DOKill();
             rect.DOAnchorPos(_targetPos, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true).OnComplete(() => { action?.Invoke(); }).SetUpdate(true);
+#else
+            if (rectCloseButton)
+            {
+                rectCloseButton.localScale = Vector3.zero;
+            }
+
+            rect.anchoredPosition = _targetPos;
+            action?.Invoke();
+#endif
         }
 
         private void OnDisable()
         {
-            rectCloseButton.DOKill();
-            _canvasGroup.DOKill();
-            rect.DOKill();
+#if DOTWEEN_EXISTS
+            if (rectCloseButton) rectCloseButton.DOKill();
+            if (_canvasGroup) _canvasGroup.DOKill();
+            if (rect) rect.DOKill();
+#endif
         }
     }
 }
