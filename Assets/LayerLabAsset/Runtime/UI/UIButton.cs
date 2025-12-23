@@ -40,7 +40,7 @@ namespace LayerLabAsset
             //트랜지션 끄기
             // transition = Transition.ColorTint;
 
-            SetButtonNavigation();
+ㅇㅇ            SetButtonNavigation();
             SetButtonScalePower();
         }
 
