@@ -2,8 +2,6 @@
     "name": "LayerLabAsset.Runtime",
     "rootNamespace": "LayerLabAsset",
     "references": [
-        "UniRx",
-        "DOTween.Modules",
         "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
@@ -20,11 +18,8 @@
             "define": "UNIRX_EXISTS"
         },
         {
-            "resource": "UniRx",
-            "define": "UNIRX_EXISTS"
-        },
-        {
-            "resource": "DOTween.Modules",
+            "name": "com.demigiant.dotween",
+            "expression": "",
             "define": "DOTWEEN_EXISTS"
         }
     ],

@@ -5,9 +5,9 @@ Unity 유틸리티 패키지 - Singleton, FSM, Popup Manager, UI 컴포넌트 �
 ## 요구사항
 
 - Unity 6000.0+ (Unity 6)
-- UniRx
-- DOTween
-- TextMeshPro
+- TextMeshPro (필수)
+- DOTween (선택) - UI 애니메이션 기능
+- UniRx (선택) - Popup Manager 리액티브 기능
 
 ## 설치 방법
 
@@ -27,20 +27,34 @@ https://github.com/yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 ```
 
-### 2. 의존성 설치 (필수)
+### 2. TextMeshPro 설치 (필수)
 
-1. **UniRx** - Asset Store 또는 OpenUPM에서 설치
-2. **DOTween** - Asset Store에서 설치
-3. **TextMeshPro** - Window > TextMeshPro > Import TMP Essential Resources
+**Window > TextMeshPro > Import TMP Essential Resources**
 
-### 3. DOTween ASMDEF 생성 (필수)
+### 3. 선택적 의존성 설치
 
-DOTween 설치 후 반드시 ASMDEF를 생성해야 합니다:
+#### DOTween (UIButton 애니메이션, PopupAnimation)
 
-1. **Tools > Demigiant > DOTween Utility Panel** 열기
-2. **"Create ASMDEF"** 버튼 클릭
+1. Asset Store에서 DOTween 설치
+2. **Tools > Demigiant > DOTween Utility Panel** 열기
+3. **"Create ASMDEF"** 버튼 클릭
+4. `Packages/com.layerlab.asset/Runtime/LayerLabAsset.Runtime.asmdef` 파일 선택
+5. References에 `DOTween.Modules` 추가
+6. **Project Settings > Player > Scripting Define Symbols**에 `DOTWEEN_EXISTS` 추가
 
-> ⚠️ 이 단계를 건너뛰면 DOTween 관련 컴파일 에러가 발생합니다.
+#### UniRx (Popup Manager 리액티브 기능)
+
+**OpenUPM 설치 (자동 감지):**
+```
+openupm add com.neuecc.unirx
+```
+OpenUPM으로 설치하면 자동으로 기능이 활성화됩니다.
+
+**Asset Store 설치 (수동 설정):**
+1. Asset Store에서 UniRx 설치
+2. `Packages/com.layerlab.asset/Runtime/LayerLabAsset.Runtime.asmdef` 파일 선택
+3. References에 `UniRx` 추가
+4. **Project Settings > Player > Scripting Define Symbols**에 `UNIRX_EXISTS` 추가
 
 ## 패키지 업데이트
 
@@ -50,11 +64,21 @@ DOTween 설치 후 반드시 ASMDEF를 생성해야 합니다:
 
 - **Singleton** - 제네릭 싱글톤 패턴
 - **FSM** - 유한 상태 기계 (Enum 기반 / Character 기반)
-- **Popup Manager** - 팝업 생명주기 관리
-- **UI Components** - UIButton, UICanvasView 등
+- **Popup Manager** - 팝업 생명주기 관리 (UniRx 필요)
+- **UI Components** - UIButton (DOTween으로 애니메이션), UICanvasView 등
 
 ## Editor Tools
 
 - **LayerLabAsset > Favorites Panel** - 자주 사용하는 에셋 즐겨찾기
 - **LayerLabAsset > Update Package** - 패키지 업데이트
 - **LayerLabAsset > Disable Raycast Target** - UI Raycast Target 일괄 비활성화
+
+## 기능별 의존성
+
+| 기능 | DOTween | UniRx |
+|------|---------|-------|
+| Singleton | - | - |
+| FSM | - | - |
+| UIButton 애니메이션 | 필요 | - |
+| PopupAnimation | 필요 | - |
+| PopupManager 리액티브 | - | 필요 |
