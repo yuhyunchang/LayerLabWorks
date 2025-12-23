@@ -16,7 +16,12 @@ Unity 유틸리티 패키지 - Singleton, FSM, Popup Manager, UI 컴포넌트 �
 Unity Package Manager에서 **Add package from git URL**을 선택하고 아래 주소를 입력하세요:
 
 ```
-https://github.com/yuhyunchang/LayerLabWorks.git?path=Assets/LayerLabAsset
+https://github.com/yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
+```
+
+또는 SSH:
+```
+git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 ```
 
 ### 2. 의존성 설치 (필수)
