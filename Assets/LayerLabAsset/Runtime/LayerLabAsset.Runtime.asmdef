@@ -11,17 +11,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.neuecc.unirx",
-            "expression": "",
-            "define": "UNIRX_EXISTS"
-        },
-        {
-            "name": "com.demigiant.dotween",
-            "expression": "",
-            "define": "DOTWEEN_EXISTS"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }

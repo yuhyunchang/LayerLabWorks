@@ -1,7 +1,5 @@
-#if DOTWEEN_EXISTS
-using DG.Tweening;
-#endif
 using System;
+using System.Collections;
 using UnityEngine;
 
 namespace LayerLabAsset
@@ -19,10 +17,14 @@ namespace LayerLabAsset
         private Vector2 _targetPos;
         private CanvasGroup _canvasGroup;
 
+        private Coroutine _scaleCoroutine;
+        private Coroutine _fadeCoroutine;
+        private Coroutine _moveCoroutine;
+        private Coroutine _closeButtonCoroutine;
+
 
         public void Init()
         {
-
             _canvasGroup = gameObject.TryGetComponent<CanvasGroup>(out var cg) ? cg : gameObject.AddComponent<CanvasGroup>();
 
             if (isFade)
@@ -47,7 +49,7 @@ namespace LayerLabAsset
                             _targetPos.y = rect.sizeDelta.y;
                             break;
                         case PanelMoveType.BotToTop:
-                            _targetPos.y = -Screen.height; //-rect.sizeDelta.y;
+                            _targetPos.y = -Screen.height;
                             break;
                         case PanelMoveType.LeftToRight:
                             _targetPos.x = -rect.sizeDelta.x;
@@ -57,28 +59,28 @@ namespace LayerLabAsset
                             break;
                     }
 
-#if DOTWEEN_EXISTS
-                    rect.DOAnchorPos(_targetPos, 0f).SetUpdate(true);
-#else
                     rect.anchoredPosition = _targetPos;
-#endif
                 }
             }
         }
 
         public void OpenAnimation()
         {
-#if DOTWEEN_EXISTS
             if (isScale && rect)
             {
-                if (rectCloseButton) rectCloseButton.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true).SetDelay(0.1f);
-                rect.DOScale(1f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true);
+                if (rectCloseButton)
+                {
+                    StopCoroutineSafe(ref _closeButtonCoroutine);
+                    _closeButtonCoroutine = StartCoroutine(ScaleTo(rectCloseButton, 1f, 0.2f, EaseType.OutBack, 0.1f));
+                }
+                StopCoroutineSafe(ref _scaleCoroutine);
+                _scaleCoroutine = StartCoroutine(ScaleTo(rect, 1f, 0.2f, EaseType.OutBack));
             }
 
             if (isFade && _canvasGroup)
             {
-                _canvasGroup.DOKill();
-                _canvasGroup.DOFade(1f, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true);
+                StopCoroutineSafe(ref _fadeCoroutine);
+                _fadeCoroutine = StartCoroutine(FadeTo(1f, 0.2f));
             }
 
             if (panelMoveType != PanelMoveType.None)
@@ -95,42 +97,13 @@ namespace LayerLabAsset
                         break;
                 }
 
-                rect.DOAnchorPos(_targetPos, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true);
+                StopCoroutineSafe(ref _moveCoroutine);
+                _moveCoroutine = StartCoroutine(MoveTo(_targetPos, 0.2f));
             }
-#else
-            if (isScale && rect)
-            {
-                if (rectCloseButton) rectCloseButton.localScale = Vector3.one;
-                rect.localScale = Vector3.one;
-            }
-
-            if (isFade && _canvasGroup)
-            {
-                _canvasGroup.alpha = 1f;
-            }
-
-            if (panelMoveType != PanelMoveType.None)
-            {
-                switch (panelMoveType)
-                {
-                    case PanelMoveType.TopToBot:
-                    case PanelMoveType.BotToTop:
-                        _targetPos.y = 0;
-                        break;
-                    case PanelMoveType.LeftToRight:
-                    case PanelMoveType.RightToLeft:
-                        _targetPos.x = 0;
-                        break;
-                }
-
-                rect.anchoredPosition = _targetPos;
-            }
-#endif
         }
 
         public void CloseAnimation(Action action)
         {
-
             if (panelMoveType == PanelMoveType.None)
             {
                 action?.Invoke();
@@ -154,32 +127,100 @@ namespace LayerLabAsset
                     break;
             }
 
-#if DOTWEEN_EXISTS
             if (rectCloseButton)
             {
-                rectCloseButton.DOScale(0f, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true);
+                StopCoroutineSafe(ref _closeButtonCoroutine);
+                _closeButtonCoroutine = StartCoroutine(ScaleTo(rectCloseButton, 0f, 0.2f, EaseType.OutCubic));
             }
 
-            rect.DOKill();
-            rect.DOAnchorPos(_targetPos, 0.2f).SetEase(Ease.OutCubic).SetUpdate(true).OnComplete(() => { action?.Invoke(); }).SetUpdate(true);
-#else
-            if (rectCloseButton)
-            {
-                rectCloseButton.localScale = Vector3.zero;
-            }
-
-            rect.anchoredPosition = _targetPos;
-            action?.Invoke();
-#endif
+            StopCoroutineSafe(ref _moveCoroutine);
+            _moveCoroutine = StartCoroutine(MoveTo(_targetPos, 0.2f, action));
         }
 
         private void OnDisable()
         {
-#if DOTWEEN_EXISTS
-            if (rectCloseButton) rectCloseButton.DOKill();
-            if (_canvasGroup) _canvasGroup.DOKill();
-            if (rect) rect.DOKill();
-#endif
+            StopAllCoroutines();
+            _scaleCoroutine = null;
+            _fadeCoroutine = null;
+            _moveCoroutine = null;
+            _closeButtonCoroutine = null;
+        }
+
+        private void StopCoroutineSafe(ref Coroutine coroutine)
+        {
+            if (coroutine != null)
+            {
+                StopCoroutine(coroutine);
+                coroutine = null;
+            }
+        }
+
+        private enum EaseType { OutCubic, OutBack }
+
+        private IEnumerator ScaleTo(Transform target, float targetScale, float duration, EaseType easeType, float delay = 0f)
+        {
+            if (delay > 0f)
+                yield return new WaitForSecondsRealtime(delay);
+
+            Vector3 startScale = target.localScale;
+            Vector3 endScale = Vector3.one * targetScale;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                float easedT = easeType == EaseType.OutBack ? EaseOutBack(t) : EaseOutCubic(t);
+                target.localScale = Vector3.LerpUnclamped(startScale, endScale, easedT);
+                yield return null;
+            }
+
+            target.localScale = endScale;
+        }
+
+        private IEnumerator FadeTo(float targetAlpha, float duration)
+        {
+            float startAlpha = _canvasGroup.alpha;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                _canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, EaseOutCubic(t));
+                yield return null;
+            }
+
+            _canvasGroup.alpha = targetAlpha;
+        }
+
+        private IEnumerator MoveTo(Vector2 targetPos, float duration, Action onComplete = null)
+        {
+            Vector2 startPos = rect.anchoredPosition;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                rect.anchoredPosition = Vector2.Lerp(startPos, targetPos, EaseOutCubic(t));
+                yield return null;
+            }
+
+            rect.anchoredPosition = targetPos;
+            onComplete?.Invoke();
+        }
+
+        private static float EaseOutCubic(float t)
+        {
+            return 1f - Mathf.Pow(1f - t, 3f);
+        }
+
+        private static float EaseOutBack(float t)
+        {
+            const float c1 = 1.70158f;
+            const float c3 = c1 + 1f;
+            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
         }
     }
 }
