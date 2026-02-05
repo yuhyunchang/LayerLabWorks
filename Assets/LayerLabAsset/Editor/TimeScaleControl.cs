@@ -102,7 +102,8 @@ namespace LayerLabAsset
             TimeScale2xButton.Id,
             TimeScale3xButton.Id,
             TimeScale5xButton.Id,
-            TimeScale10xButton.Id
+            TimeScale10xButton.Id,
+            TimeScaleCloseButton.Id
         )
         { }
 
@@ -222,7 +223,7 @@ namespace LayerLabAsset
         {
             text = "1x";
             clicked += () => TimeScaleSettings.SetTimeScale(1f);
-            style.width = 30;
+            style.width = 24;
         }
     }
 
@@ -234,7 +235,7 @@ namespace LayerLabAsset
         {
             text = "2x";
             clicked += () => TimeScaleSettings.SetTimeScale(2f);
-            style.width = 30;
+            style.width = 24;
         }
     }
 
@@ -246,7 +247,7 @@ namespace LayerLabAsset
         {
             text = "3x";
             clicked += () => TimeScaleSettings.SetTimeScale(3f);
-            style.width = 30;
+            style.width = 24;
         }
     }
 
@@ -258,7 +259,7 @@ namespace LayerLabAsset
         {
             text = "5x";
             clicked += () => TimeScaleSettings.SetTimeScale(5f);
-            style.width = 30;
+            style.width = 24;
         }
     }
 
@@ -270,7 +271,56 @@ namespace LayerLabAsset
         {
             text = "10x";
             clicked += () => TimeScaleSettings.SetTimeScale(10f);
-            style.width = 35;
+            style.width = 28;
+        }
+    }
+
+    [EditorToolbarElement(Id, typeof(SceneView))]
+    public class TimeScaleCloseButton : VisualElement
+    {
+        public const string Id = "LayerLabAsset/TimeScaleControl/Close";
+
+        public TimeScaleCloseButton()
+        {
+            var button = new Label("×")
+            {
+                style =
+                {
+                    width = 16,
+                    height = 16,
+                    marginLeft = 8,
+                    fontSize = 14,
+                    color = new Color(0.6f, 0.6f, 0.6f),
+                    unityTextAlign = TextAnchor.MiddleCenter,
+                    unityFontStyleAndWeight = FontStyle.Bold
+                }
+            };
+
+            button.RegisterCallback<MouseEnterEvent>(evt =>
+            {
+                button.style.color = new Color(1f, 0.4f, 0.4f);
+            });
+            button.RegisterCallback<MouseLeaveEvent>(evt =>
+            {
+                button.style.color = new Color(0.6f, 0.6f, 0.6f);
+            });
+            button.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                TimeScaleSettings.ShowInSceneView = false;
+                foreach (var sceneView in SceneView.sceneViews)
+                {
+                    if (sceneView is SceneView sv)
+                    {
+                        sv.TryGetOverlay("Time Scale Control", out var overlay);
+                        if (overlay != null)
+                            overlay.displayed = false;
+                    }
+                }
+            });
+
+            Add(button);
+            style.flexDirection = FlexDirection.Row;
+            style.alignItems = Align.Center;
         }
     }
 
