@@ -1,8 +1,10 @@
 using System;
 using System.Reflection;
 using UnityEditor;
+#if UNITY_6000_0_OR_NEWER
 using UnityEditor.Overlays;
 using UnityEditor.Toolbars;
+#endif
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -56,8 +58,8 @@ namespace LayerLabAsset
     /// </summary>
     public static class TimeScaleMenu
     {
+#if UNITY_6000_0_OR_NEWER
         private const string SceneViewMenuPath = "LayerLabAsset/TimeScale Control/Show in Scene View";
-        private const string MainToolbarMenuPath = "LayerLabAsset/TimeScale Control/Show in Main Toolbar";
 
         [MenuItem(SceneViewMenuPath, false, 106)]
         private static void ToggleSceneView()
@@ -71,6 +73,9 @@ namespace LayerLabAsset
             Menu.SetChecked(SceneViewMenuPath, TimeScaleSettings.ShowInSceneView);
             return true;
         }
+#endif
+
+        private const string MainToolbarMenuPath = "LayerLabAsset/TimeScale Control/Show in Main Toolbar";
 
         [MenuItem(MainToolbarMenuPath, false, 107)]
         private static void ToggleMainToolbar()
@@ -87,6 +92,7 @@ namespace LayerLabAsset
         }
     }
 
+#if UNITY_6000_0_OR_NEWER
     #region Scene View Overlay
 
     /// <summary>
@@ -325,6 +331,7 @@ namespace LayerLabAsset
     }
 
     #endregion
+#endif
 
     #region Main Toolbar
 
