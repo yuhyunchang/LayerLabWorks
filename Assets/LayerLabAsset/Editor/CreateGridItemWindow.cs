@@ -24,7 +24,7 @@ namespace LayerLabAsset
         private SerializedProperty spritesProperty;
         private Vector2 scrollPosition;
 
-        [MenuItem("LayerLabAsset/Create Grid Item")]
+        [MenuItem("LayerLabAsset/Create Grid Item", false, 102)]
         public static void ShowWindow()
         {
             var window = GetWindow<CreateGridItemWindow>("Create Grid Item");

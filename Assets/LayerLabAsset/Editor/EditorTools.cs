@@ -13,7 +13,7 @@ namespace LayerLabAsset
         private static ListRequest _listRequest;
         private static AddRequest _addRequest;
 
-        [MenuItem("LayerLabAsset/Update Package")]
+        [MenuItem("LayerLabAsset/Update Package", false, 200)]
         static public void UpdatePackage()
         {
             Debug.Log("LayerLabAsset: Checking for updates...");
@@ -82,13 +82,13 @@ namespace LayerLabAsset
             }
         }
 
-        [MenuItem("LayerLabAsset/Reset PlayerPrefs")]
+        [MenuItem("LayerLabAsset/Reset PlayerPrefs", false, 100)]
         static public void TestCode()
         {
             PlayerPrefs.DeleteAll();
         }
 
-        [MenuItem("LayerLabAsset/Disable Raycast Target")]
+        [MenuItem("LayerLabAsset/Disable Raycast Target", false, 101)]
         static public void DisableRaycastTarget()
         {
             GameObject[] selectedObjects = Selection.gameObjects;

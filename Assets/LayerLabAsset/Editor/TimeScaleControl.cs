@@ -59,7 +59,7 @@ namespace LayerLabAsset
         private const string SceneViewMenuPath = "LayerLabAsset/TimeScale Control/Show in Scene View";
         private const string MainToolbarMenuPath = "LayerLabAsset/TimeScale Control/Show in Main Toolbar";
 
-        [MenuItem(SceneViewMenuPath, false, 200)]
+        [MenuItem(SceneViewMenuPath, false, 106)]
         private static void ToggleSceneView()
         {
             TimeScaleSettings.ShowInSceneView = !TimeScaleSettings.ShowInSceneView;
@@ -72,7 +72,7 @@ namespace LayerLabAsset
             return true;
         }
 
-        [MenuItem(MainToolbarMenuPath, false, 201)]
+        [MenuItem(MainToolbarMenuPath, false, 107)]
         private static void ToggleMainToolbar()
         {
             TimeScaleSettings.ShowInMainToolbar = !TimeScaleSettings.ShowInMainToolbar;

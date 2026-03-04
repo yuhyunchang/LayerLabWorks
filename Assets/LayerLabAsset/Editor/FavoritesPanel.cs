@@ -72,7 +72,7 @@ namespace LayerLabAsset
             public List<FavoriteGroup> groups = new List<FavoriteGroup>();
         }
 
-        [MenuItem("LayerLabAsset/Favorites Panel %#f")]
+        [MenuItem("LayerLabAsset/Favorites Panel %#f", false, 103)]
         public static void ShowWindow()
         {
             var window = GetWindow<FavoritesPanel>("Favorites");
