@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LayerLab Asset is a Unity utility package providing Singleton, FSM, Popup Manager, and UI components. Requires Unity 6000.0+ (Unity 6).
+LayerLab Asset is a Unity utility package providing Singleton, FSM, Popup Manager, and UI components. Requires Unity 2021.3+ (Scene View Overlay는 Unity 6 전용).
 
 **Required Dependencies** (must install separately):
 - UniRx - Reactive extensions for popup management

@@ -4,7 +4,7 @@ Unity utility package with Singleton, FSM, Popup Manager, and UI components.
 
 ## Requirements
 
-- **Unity 6000.0** (Unity 6) or higher
+- **Unity 2021.3** or higher (Scene View Overlay는 Unity 6에서만 지원)
 
 ### Required Dependencies
 
