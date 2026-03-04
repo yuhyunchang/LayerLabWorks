@@ -147,5 +147,11 @@ namespace LayerLabAsset
                 DisableRaycastTargetRecursive(child.gameObject, ref imageCount, ref tmpCount);
             }
         }
+
+        [MenuItem("LayerLabAsset/GitHub", false, 1000)]
+        static public void OpenGitHub()
+        {
+            Application.OpenURL("https://github.com/yuhyunchang/LayerLabWorks");
+        }
     }
 }

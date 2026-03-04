@@ -48,3 +48,4 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 - **LayerLabAsset > Reset PlayerPrefs** - PlayerPrefs 초기화
 - **LayerLabAsset > Force Start Scene** - 플레이 모드 시작 씬 강제 지정
 - **LayerLabAsset > TimeScale Control** - 타임스케일 조절 (Scene View 오버레이 / Main Toolbar)
+- **LayerLabAsset > GitHub** - GitHub 저장소 페이지 열기
