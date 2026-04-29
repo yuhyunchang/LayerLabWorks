@@ -1,4 +1,3 @@
-using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
@@ -8,6 +7,7 @@ namespace LayerLabAsset
     [InitializeOnLoad]
     public static class ForceStartScene
     {
+        private const string MenuPath = "LayerLabAsset/Force Start Scene";
         private const string PreviousSceneKey = "PreviousScenePath";
         private const string EnabledKey = "ForceStartScene_Enabled";
 
@@ -16,30 +16,19 @@ namespace LayerLabAsset
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
-        [MenuItem("LayerLabAsset/Force Start Scene/Enable", false, 104)]
-        private static void Enable()
+        [MenuItem(MenuPath, false, 104)]
+        private static void Toggle()
         {
-            EditorPrefs.SetBool(EnabledKey, true);
-            UnityEngine.Debug.Log("Force Start Scene: Enabled");
+            bool next = !EditorPrefs.GetBool(EnabledKey, false);
+            EditorPrefs.SetBool(EnabledKey, next);
+            UnityEngine.Debug.Log($"Force Start Scene: {(next ? "Enabled" : "Disabled")}");
         }
 
-        [MenuItem("LayerLabAsset/Force Start Scene/Disable", false, 105)]
-        private static void Disable()
+        [MenuItem(MenuPath, true)]
+        private static bool ToggleValidate()
         {
-            EditorPrefs.SetBool(EnabledKey, false);
-            UnityEngine.Debug.Log("Force Start Scene: Disabled");
-        }
-
-        [MenuItem("LayerLabAsset/Force Start Scene/Enable", true, 104)]
-        private static bool EnableValidate()
-        {
-            return !EditorPrefs.GetBool(EnabledKey, false);
-        }
-
-        [MenuItem("LayerLabAsset/Force Start Scene/Disable", true, 105)]
-        private static bool DisableValidate()
-        {
-            return EditorPrefs.GetBool(EnabledKey, false);
+            Menu.SetChecked(MenuPath, EditorPrefs.GetBool(EnabledKey, false));
+            return true;
         }
 
         private static void OnPlayModeStateChanged(PlayModeStateChange state)
