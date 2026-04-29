@@ -9,6 +9,7 @@ namespace LayerLabAsset
         [SerializeField] private Vector2 spacing = new Vector2(0.1f, 0.1f);
         [SerializeField] private int columns = 10;
         [SerializeField] private int rows = 10;
+        [SerializeField] private Vector3 groupRotation = Vector3.zero;
         [SerializeField] private Vector2 scrollVelocity = new Vector2(1f, 0f);
 
         [SerializeField] private Object prefabFolder;
@@ -52,6 +53,10 @@ namespace LayerLabAsset
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
+
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Group Transform", EditorStyles.boldLabel);
+            groupRotation = EditorGUILayout.Vector3Field("Rotation (Euler)", groupRotation);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Scroll", EditorStyles.boldLabel);
@@ -126,7 +131,7 @@ namespace LayerLabAsset
             GameObject groupObj = new GameObject("PatternGrid");
             groupObj.transform.SetParent(parent, false);
             groupObj.transform.localPosition = Vector3.zero;
-            groupObj.transform.localRotation = Quaternion.identity;
+            groupObj.transform.localRotation = Quaternion.Euler(groupRotation);
             groupObj.transform.localScale = Vector3.one;
             Undo.RegisterCreatedObjectUndo(groupObj, "Create Pattern Grid");
 
