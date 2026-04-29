@@ -52,3 +52,8 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 - **LayerLabAsset > Create 2D World Grid Item** - 2D 월드 좌표에 폴더 내 프리팹 그리드 자동 배치
 - **LayerLabAsset > Create 2D Pattern Grid** - 폴더 내 프리팹을 modulo 반복으로 채워 무한 스크롤 패턴 그리드 생성
 - **LayerLabAsset > GitHub** - GitHub 저장소 페이지 열기
+
+## Runtime Components
+
+- **PatternGridScroller** - Create 2D Pattern Grid가 자동 부착. 자식 그리드를 지정 속도로 무한 스크롤 (Edit Mode 미리보기 지원)
+- **CameraGradientBackground** - Camera에 부착. Unity `Gradient`로 다중 컬러 그라데이션을 직접 편집해 카메라 배경에 적용. Vertical / Horizontal / Angle 방향 지원
