@@ -50,4 +50,5 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 - **LayerLabAsset > TimeScale Control** - 타임스케일 조절 (Scene View 오버레이 / Main Toolbar)
 - **LayerLabAsset > Create Grid Item** - UGUI 스프라이트 그리드 자동 생성
 - **LayerLabAsset > Create 2D World Grid Item** - 2D 월드 좌표에 폴더 내 프리팹 그리드 자동 배치
+- **LayerLabAsset > Create 2D Pattern Grid** - 폴더 내 프리팹을 modulo 반복으로 채워 무한 스크롤 패턴 그리드 생성
 - **LayerLabAsset > GitHub** - GitHub 저장소 페이지 열기
