@@ -5,12 +5,11 @@ namespace LayerLabAsset
 {
     public class Create2DPatternGridWindow : EditorWindow
     {
-        [SerializeField] private Vector2 cellSize = new Vector2(1f, 1f);
-        [SerializeField] private Vector2 spacing = new Vector2(0.1f, 0.1f);
+        [SerializeField] private Vector2 spacing = new Vector2(1f, 1f);
         [SerializeField] private int columns = 10;
         [SerializeField] private int rows = 10;
         [SerializeField] private Vector3 groupRotation = Vector3.zero;
-        [SerializeField] private Vector2 scrollVelocity = new Vector2(1f, 0f);
+        [SerializeField] private Vector2 scrollVelocity = new Vector2(-1f, 1f);
 
         [SerializeField] private Object prefabFolder;
         [SerializeField] private GameObject[] prefabs = new GameObject[0];
@@ -49,7 +48,6 @@ namespace LayerLabAsset
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Grid Settings", EditorStyles.boldLabel);
-            cellSize = EditorGUILayout.Vector2Field("Cell Size", cellSize);
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
@@ -124,8 +122,8 @@ namespace LayerLabAsset
             if (prefabs == null || prefabs.Length == 0 || columns <= 0 || rows <= 0)
                 return;
 
-            float pitchX = cellSize.x + spacing.x;
-            float pitchY = cellSize.y + spacing.y;
+            float pitchX = spacing.x;
+            float pitchY = spacing.y;
             int totalCells = columns * rows;
 
             GameObject groupObj = new GameObject("PatternGrid");
