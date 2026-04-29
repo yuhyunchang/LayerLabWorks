@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace LayerLabAsset
 {
-    public class CreateGridItemWindow : EditorWindow
+    public class CreateUGUIGridItemWindow : EditorWindow
     {
         [SerializeField] private Vector2 iconSize = new Vector2(100f, 100f);
         [SerializeField] private Vector2 spacing = new Vector2(10f, 10f);
@@ -27,7 +27,7 @@ namespace LayerLabAsset
         [MenuItem("LayerLabAsset/Create Grid Item", false, 102)]
         public static void ShowWindow()
         {
-            var window = GetWindow<CreateGridItemWindow>("Create Grid Item");
+            var window = GetWindow<CreateUGUIGridItemWindow>("Create Grid Item");
             window.minSize = new Vector2(320f, 400f);
         }
 

@@ -48,4 +48,6 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 - **LayerLabAsset > Reset PlayerPrefs** - PlayerPrefs 초기화
 - **LayerLabAsset > Force Start Scene** - 플레이 모드 시작 씬 강제 지정
 - **LayerLabAsset > TimeScale Control** - 타임스케일 조절 (Scene View 오버레이 / Main Toolbar)
+- **LayerLabAsset > Create Grid Item** - UGUI 스프라이트 그리드 자동 생성
+- **LayerLabAsset > Create 2D World Grid Item** - 2D 월드 좌표에 폴더 내 프리팹 그리드 자동 배치
 - **LayerLabAsset > GitHub** - GitHub 저장소 페이지 열기
