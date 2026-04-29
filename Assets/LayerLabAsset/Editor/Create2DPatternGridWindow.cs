@@ -153,8 +153,29 @@ namespace LayerLabAsset
                 CreateItem(groupObj.transform, prefab, itemLocalPos);
             }
 
+            // 프리팹 피봇이 중앙이 아닌 경우 시각적 중심이 어긋나므로 Renderer bounds로 보정
+            CenterGroupByRendererBounds(groupObj);
+
             var scroller = groupObj.AddComponent<PatternGridScroller>();
             scroller.Configure(columns, rows, pitchX, pitchY, scrollVelocity, playInEditMode);
+        }
+
+        private static void CenterGroupByRendererBounds(GameObject group)
+        {
+            var renderers = group.GetComponentsInChildren<Renderer>();
+            if (renderers == null || renderers.Length == 0) return;
+
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+            {
+                bounds.Encapsulate(renderers[i].bounds);
+            }
+
+            Vector3 worldOffset = bounds.center - group.transform.position;
+            if (worldOffset.sqrMagnitude > 0f)
+            {
+                group.transform.position -= worldOffset;
+            }
         }
 
         private void CreateItem(Transform parent, GameObject prefab, Vector3 localPos)
