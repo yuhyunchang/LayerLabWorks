@@ -13,6 +13,7 @@ namespace LayerLabAsset
     {
         [SerializeField] private Vector2 scrollVelocity = new Vector2(1f, 0f);
         [SerializeField] private Vector2 gridSize = Vector2.zero;
+        [SerializeField] private bool playInEditMode = false;
 
         private Transform[] _children;
         private Vector3[] _basePositions;
@@ -23,10 +24,11 @@ namespace LayerLabAsset
         private bool _restoredForSave;
 #endif
 
-        public void Configure(int columns, int rows, float pitchX, float pitchY, Vector2 velocity)
+        public void Configure(int columns, int rows, float pitchX, float pitchY, Vector2 velocity, bool playInEditMode)
         {
             gridSize = new Vector2(columns * pitchX, rows * pitchY);
             scrollVelocity = velocity;
+            this.playInEditMode = playInEditMode;
             _accumOffset = Vector2.zero;
             InvalidateCache();
         }
@@ -74,6 +76,12 @@ namespace LayerLabAsset
             else
             {
 #if UNITY_EDITOR
+                if (!playInEditMode)
+                {
+                    _lastEditorTime = EditorApplication.timeSinceStartup;
+                    return;
+                }
+
                 double now = EditorApplication.timeSinceStartup;
                 dt = (float)(now - _lastEditorTime);
                 _lastEditorTime = now;

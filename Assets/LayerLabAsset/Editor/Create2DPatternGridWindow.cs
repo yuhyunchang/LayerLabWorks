@@ -10,6 +10,7 @@ namespace LayerLabAsset
         [SerializeField] private int rows = 10;
         [SerializeField] private Vector3 groupRotation = Vector3.zero;
         [SerializeField] private Vector2 scrollVelocity = new Vector2(-1f, 1f);
+        [SerializeField] private bool playInEditMode = false;
 
         [SerializeField] private Object prefabFolder;
         [SerializeField] private GameObject[] prefabs = new GameObject[0];
@@ -59,6 +60,9 @@ namespace LayerLabAsset
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Scroll", EditorStyles.boldLabel);
             scrollVelocity = EditorGUILayout.Vector2Field("Scroll Velocity (units/sec)", scrollVelocity);
+            playInEditMode = EditorGUILayout.Toggle(
+                new GUIContent("Play In Edit Mode", "체크하면 정지(에디트) 상태에서도 스크롤 애니메이션이 재생됩니다"),
+                playInEditMode);
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Prefabs", EditorStyles.boldLabel);
@@ -150,7 +154,7 @@ namespace LayerLabAsset
             }
 
             var scroller = groupObj.AddComponent<PatternGridScroller>();
-            scroller.Configure(columns, rows, pitchX, pitchY, scrollVelocity);
+            scroller.Configure(columns, rows, pitchX, pitchY, scrollVelocity, playInEditMode);
         }
 
         private void CreateItem(Transform parent, GameObject prefab, Vector3 localPos)
