@@ -42,7 +42,7 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 
 ## Editor Tools
 
-- **LayerLabAsset > Favorites Panel** - 자주 사용하는 에셋 즐겨찾기 (Ctrl+Shift+F)
+- **LayerLabAsset > Favorites Panel** - 자주 사용하는 에셋 즐겨찾기
 - **LayerLabAsset > Update Package** - 패키지 업데이트
 - **LayerLabAsset > Disable Raycast Target** - UI Raycast Target 일괄 비활성화
 - **LayerLabAsset > Reset PlayerPrefs** - PlayerPrefs 초기화
