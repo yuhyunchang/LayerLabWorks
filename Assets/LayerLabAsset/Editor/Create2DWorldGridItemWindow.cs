@@ -9,7 +9,6 @@ namespace LayerLabAsset
         [SerializeField] private Vector2 spacing = new Vector2(0.1f, 0.1f);
         [SerializeField] private int columns = 4;
         [SerializeField] private int rows = 3;
-        [SerializeField] private Vector2 groupSpacing = new Vector2(1f, 1f);
 
         [SerializeField] private Object prefabFolder;
         [SerializeField] private GameObject[] prefabs = new GameObject[0];
@@ -55,7 +54,6 @@ namespace LayerLabAsset
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
-            groupSpacing = EditorGUILayout.Vector2Field("Group Spacing", groupSpacing);
 
             // --- Prefabs ---
             EditorGUILayout.Space(10);
@@ -125,19 +123,12 @@ namespace LayerLabAsset
             int itemsPerGroup = columns * rows;
             int totalGroups = Mathf.CeilToInt((float)prefabs.Length / itemsPerGroup);
 
-            float groupWidth = columns * cellSize.x + (columns - 1) * spacing.x;
-
             for (int g = 0; g < totalGroups; g++)
             {
                 int startIndex = g * itemsPerGroup;
                 int endIndex = Mathf.Min(startIndex + itemsPerGroup, prefabs.Length);
 
-                Vector3 groupLocalPos = new Vector3(
-                    (g - (totalGroups - 1) * 0.5f) * (groupWidth + groupSpacing.x),
-                    0f,
-                    0f);
-
-                GameObject groupObj = CreateGroup(parent, g, groupLocalPos);
+                GameObject groupObj = CreateGroup(parent, g, Vector3.zero);
 
                 for (int i = startIndex; i < endIndex; i++)
                 {
