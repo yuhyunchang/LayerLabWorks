@@ -126,7 +126,6 @@ namespace LayerLabAsset
             int totalGroups = Mathf.CeilToInt((float)prefabs.Length / itemsPerGroup);
 
             float groupWidth = columns * cellSize.x + (columns - 1) * spacing.x;
-            float groupHeight = rows * cellSize.y + (rows - 1) * spacing.y;
 
             for (int g = 0; g < totalGroups; g++)
             {
@@ -134,7 +133,7 @@ namespace LayerLabAsset
                 int endIndex = Mathf.Min(startIndex + itemsPerGroup, prefabs.Length);
 
                 Vector3 groupLocalPos = new Vector3(
-                    g * (groupWidth + groupSpacing.x),
+                    (g - (totalGroups - 1) * 0.5f) * (groupWidth + groupSpacing.x),
                     0f,
                     0f);
 
@@ -149,8 +148,8 @@ namespace LayerLabAsset
                     int row = localIndex / columns;
 
                     Vector3 itemLocalPos = new Vector3(
-                        col * (cellSize.x + spacing.x),
-                        -row * (cellSize.y + spacing.y),
+                        (col - (columns - 1) * 0.5f) * (cellSize.x + spacing.x),
+                        -(row - (rows - 1) * 0.5f) * (cellSize.y + spacing.y),
                         0f);
 
                     CreateItem(groupObj.transform, prefabs[i], itemLocalPos);
