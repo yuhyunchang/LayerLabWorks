@@ -45,6 +45,7 @@ git@github.com:yuhyunchang/LayerLabWorks.git?path=/Assets/LayerLabAsset
 - **LayerLabAsset > Favorites Panel** - 자주 사용하는 에셋 즐겨찾기 (Ctrl+Shift+F)
 - **LayerLabAsset > Update Package** - 패키지 업데이트
 - **LayerLabAsset > Disable Raycast Target** - UI Raycast Target 일괄 비활성화
+- **LayerLabAsset > UGUI Prefab Preview** - 프로젝트 창에서 UGUI 프리팹을 파란 박스 대신 실제 프리뷰 이미지로 표시 (토글, 기본 Off)
 - **LayerLabAsset > Reset PlayerPrefs** - PlayerPrefs 초기화
 - **LayerLabAsset > Force Start Scene** - 플레이 모드 시작 씬 강제 지정
 - **LayerLabAsset > TimeScale Control** - 타임스케일 조절 (Scene View 오버레이 / Main Toolbar)
