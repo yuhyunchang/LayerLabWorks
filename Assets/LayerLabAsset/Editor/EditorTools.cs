@@ -1,4 +1,9 @@
-﻿using TMPro;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
+using TMPro;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -146,6 +151,145 @@ namespace LayerLabAsset
             {
                 DisableRaycastTargetRecursive(child.gameObject, ref imageCount, ref tmpCount);
             }
+        }
+
+        private const string RegenerateGuidsMenuPath = "LayerLabAsset/Regenerate Selected Asset GUIDs";
+        private static readonly Regex MetaGuidRegex = new Regex("^guid: [0-9a-fA-F]{32}$", RegexOptions.Multiline | RegexOptions.Compiled);
+
+        [MenuItem(RegenerateGuidsMenuPath, false, 150)]
+        static public void RegenerateSelectedAssetGuids()
+        {
+            List<string> assetPaths = GetSelectedAssetPathsForGuidRegeneration();
+
+            if (assetPaths.Count == 0)
+            {
+                Debug.LogWarning("Assets 폴더 아래의 파일 또는 폴더를 선택해주세요.");
+                return;
+            }
+
+            bool confirmed = EditorUtility.DisplayDialog(
+                "GUID 갱신 확인",
+                $"선택한 대상에서 {assetPaths.Count}개 파일 asset의 GUID를 새로 생성합니다.\n\n기존 scene, prefab, material, ScriptableObject 등이 이 asset을 참조하고 있다면 연결이 끊길 수 있습니다. 계속할까요?",
+                "GUID 갱신",
+                "취소");
+
+            if (!confirmed)
+            {
+                return;
+            }
+
+            int updatedCount = 0;
+            int skippedCount = 0;
+
+            AssetDatabase.StartAssetEditing();
+
+            try
+            {
+                foreach (string assetPath in assetPaths)
+                {
+                    if (RegenerateAssetGuid(assetPath))
+                    {
+                        updatedCount++;
+                    }
+                    else
+                    {
+                        skippedCount++;
+                    }
+                }
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            }
+
+            Debug.Log($"GUID 갱신 완료 - 갱신: {updatedCount}개, 건너뜀: {skippedCount}개");
+        }
+
+        [MenuItem(RegenerateGuidsMenuPath, true)]
+        static public bool CanRegenerateSelectedAssetGuids()
+        {
+            foreach (string guid in Selection.assetGUIDs)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+
+                if (IsEditableAssetPath(path))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static List<string> GetSelectedAssetPathsForGuidRegeneration()
+        {
+            HashSet<string> paths = new HashSet<string>();
+
+            foreach (string guid in Selection.assetGUIDs)
+            {
+                string selectedPath = AssetDatabase.GUIDToAssetPath(guid);
+
+                if (!IsEditableAssetPath(selectedPath))
+                {
+                    continue;
+                }
+
+                if (AssetDatabase.IsValidFolder(selectedPath))
+                {
+                    foreach (string childGuid in AssetDatabase.FindAssets(string.Empty, new[] { selectedPath }))
+                    {
+                        string childPath = AssetDatabase.GUIDToAssetPath(childGuid);
+
+                        if (IsEditableFileAssetPath(childPath))
+                        {
+                            paths.Add(childPath);
+                        }
+                    }
+                }
+                else if (IsEditableFileAssetPath(selectedPath))
+                {
+                    paths.Add(selectedPath);
+                }
+            }
+
+            List<string> sortedPaths = new List<string>(paths);
+            sortedPaths.Sort(StringComparer.Ordinal);
+            return sortedPaths;
+        }
+
+        private static bool RegenerateAssetGuid(string assetPath)
+        {
+            string metaPath = assetPath + ".meta";
+
+            if (!File.Exists(metaPath))
+            {
+                Debug.LogWarning($"메타 파일을 찾을 수 없어 GUID 갱신을 건너뜁니다: {assetPath}");
+                return false;
+            }
+
+            string metaText = File.ReadAllText(metaPath, Encoding.UTF8);
+
+            if (!MetaGuidRegex.IsMatch(metaText))
+            {
+                Debug.LogWarning($"메타 파일에서 GUID를 찾을 수 없어 갱신을 건너뜁니다: {assetPath}");
+                return false;
+            }
+
+            string newGuid = GUID.Generate().ToString();
+            string updatedMetaText = MetaGuidRegex.Replace(metaText, "guid: " + newGuid, 1);
+            File.WriteAllText(metaPath, updatedMetaText, new UTF8Encoding(false));
+            return true;
+        }
+
+        private static bool IsEditableAssetPath(string path)
+        {
+            return path == "Assets" || (!string.IsNullOrEmpty(path) && path.StartsWith("Assets/", StringComparison.Ordinal));
+        }
+
+        private static bool IsEditableFileAssetPath(string path)
+        {
+            return IsEditableAssetPath(path) && !AssetDatabase.IsValidFolder(path);
         }
 
         [MenuItem("LayerLabAsset/GitHub", false, 1000)]
