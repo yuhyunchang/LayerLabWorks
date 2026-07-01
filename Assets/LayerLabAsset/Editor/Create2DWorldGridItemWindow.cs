@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -10,12 +11,12 @@ namespace LayerLabAsset
         [SerializeField] private int columns = 4;
         [SerializeField] private int rows = 3;
 
-        [SerializeField] private Object prefabFolder;
-        [SerializeField] private GameObject[] prefabs = new GameObject[0];
+        [SerializeField] private Object itemFolder;
+        [SerializeField] private Object[] items = new Object[0];
 
         private GameObject targetObject;
         private SerializedObject serializedWindow;
-        private SerializedProperty prefabsProperty;
+        private SerializedProperty itemsProperty;
         private Vector2 scrollPosition;
 
         [MenuItem("LayerLabAsset/Create 2D World Grid Item", false, 103)]
@@ -28,7 +29,7 @@ namespace LayerLabAsset
         private void OnEnable()
         {
             serializedWindow = new SerializedObject(this);
-            prefabsProperty = serializedWindow.FindProperty("prefabs");
+            itemsProperty = serializedWindow.FindProperty("items");
         }
 
         private void OnGUI()
@@ -55,30 +56,33 @@ namespace LayerLabAsset
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
 
-            // --- Prefabs ---
+            // --- Items ---
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Prefabs", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Items", EditorStyles.boldLabel);
 
-            Object prevFolder = prefabFolder;
-            prefabFolder = EditorGUILayout.ObjectField("Prefab Folder", prefabFolder, typeof(Object), false);
-            if (prefabFolder != prevFolder && prefabFolder != null)
-                LoadPrefabsFromFolder();
+            Object prevFolder = itemFolder;
+            itemFolder = EditorGUILayout.ObjectField("Asset Folder", itemFolder, typeof(Object), false);
+            if (itemFolder != prevFolder && itemFolder != null)
+                LoadItemsFromFolder();
 
-            EditorGUILayout.PropertyField(prefabsProperty, true);
+            EditorGUILayout.PropertyField(itemsProperty, true);
+            serializedWindow.ApplyModifiedProperties();
+            NormalizeItems();
+            serializedWindow.Update();
 
             EditorGUILayout.Space(5);
-            if (GUILayout.Button("Load Prefabs from Folder"))
+            if (GUILayout.Button("Load Prefabs and Sprites from Folder"))
             {
-                if (prefabFolder != null)
-                    LoadPrefabsFromFolder();
+                if (itemFolder != null)
+                    LoadItemsFromFolder();
                 else
-                    EditorUtility.DisplayDialog("Error", "Prefab Folder를 먼저 지정하세요.", "OK");
+                    EditorUtility.DisplayDialog("Error", "Asset Folder를 먼저 지정하세요.", "OK");
             }
 
             bool changed = EditorGUI.EndChangeCheck();
 
             // --- 변경 시 자동 리빌드 ---
-            if (changed && targetObject != null && prefabs != null && prefabs.Length > 0)
+            if (changed && targetObject != null && items != null && items.Length > 0)
             {
                 Undo.RegisterFullObjectHierarchyUndo(targetObject, "Auto Rebuild Grid");
                 ClearGrid(targetObject.transform);
@@ -117,22 +121,23 @@ namespace LayerLabAsset
 
         private void BuildGrid(Transform parent)
         {
-            if (prefabs == null || prefabs.Length == 0 || columns <= 0 || rows <= 0)
+            if (items == null || items.Length == 0 || columns <= 0 || rows <= 0)
                 return;
 
             int itemsPerGroup = columns * rows;
-            int totalGroups = Mathf.CeilToInt((float)prefabs.Length / itemsPerGroup);
+            int totalGroups = Mathf.CeilToInt((float)items.Length / itemsPerGroup);
 
             for (int g = 0; g < totalGroups; g++)
             {
                 int startIndex = g * itemsPerGroup;
-                int endIndex = Mathf.Min(startIndex + itemsPerGroup, prefabs.Length);
+                int endIndex = Mathf.Min(startIndex + itemsPerGroup, items.Length);
 
                 GameObject groupObj = CreateGroup(parent, g, Vector3.zero);
 
                 for (int i = startIndex; i < endIndex; i++)
                 {
-                    if (prefabs[i] == null) continue;
+                    Object item = items[i];
+                    if (!IsSupportedItem(item)) continue;
 
                     int localIndex = i - startIndex;
                     int col = localIndex % columns;
@@ -143,7 +148,7 @@ namespace LayerLabAsset
                         -(row - (rows - 1) * 0.5f) * (cellSize.y + spacing.y),
                         0f);
 
-                    CreateItem(groupObj.transform, prefabs[i], itemLocalPos);
+                    CreateItem(groupObj.transform, item, itemLocalPos);
                 }
             }
         }
@@ -158,14 +163,30 @@ namespace LayerLabAsset
             return groupObj;
         }
 
-        private void CreateItem(Transform parent, GameObject prefab, Vector3 localPos)
+        private void CreateItem(Transform parent, Object item, Vector3 localPos)
         {
-            GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
-            if (instance == null)
+            GameObject instance = null;
+
+            if (item is GameObject prefab)
             {
-                instance = Instantiate(prefab, parent);
-                instance.name = prefab.name;
+                instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
+                if (instance == null)
+                {
+                    instance = Instantiate(prefab, parent);
+                    instance.name = prefab.name;
+                }
             }
+            else if (item is Sprite sprite)
+            {
+                instance = new GameObject(sprite.name);
+                instance.transform.SetParent(parent, false);
+
+                SpriteRenderer spriteRenderer = instance.AddComponent<SpriteRenderer>();
+                spriteRenderer.sprite = sprite;
+            }
+
+            if (instance == null)
+                return;
 
             instance.transform.localPosition = localPos;
             instance.transform.localRotation = Quaternion.identity;
@@ -179,9 +200,41 @@ namespace LayerLabAsset
                 Undo.DestroyObjectImmediate(parent.GetChild(i).gameObject);
         }
 
-        private void LoadPrefabsFromFolder()
+        private void NormalizeItems()
         {
-            string folderPath = AssetDatabase.GetAssetPath(prefabFolder);
+            if (items == null || items.Length == 0)
+                return;
+
+            List<Object> validItems = new List<Object>();
+            bool changed = false;
+
+            foreach (Object item in items)
+            {
+                if (item == null || IsSupportedItem(item))
+                {
+                    validItems.Add(item);
+                }
+                else
+                {
+                    changed = true;
+                }
+            }
+
+            if (!changed)
+                return;
+
+            items = validItems.ToArray();
+            serializedWindow.Update();
+        }
+
+        private bool IsSupportedItem(Object item)
+        {
+            return item is GameObject || item is Sprite;
+        }
+
+        private void LoadItemsFromFolder()
+        {
+            string folderPath = AssetDatabase.GetAssetPath(itemFolder);
 
             if (string.IsNullOrEmpty(folderPath) || !AssetDatabase.IsValidFolder(folderPath))
             {
@@ -189,24 +242,41 @@ namespace LayerLabAsset
                 return;
             }
 
-            string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { folderPath });
+            HashSet<string> guidSet = new HashSet<string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { folderPath }))
+                guidSet.Add(guid);
 
-            if (guids.Length == 0)
+            foreach (string guid in AssetDatabase.FindAssets("t:Sprite", new[] { folderPath }))
+                guidSet.Add(guid);
+
+            if (guidSet.Count == 0)
             {
-                EditorUtility.DisplayDialog("Info", "해당 폴더에 프리팹이 없습니다.", "OK");
+                EditorUtility.DisplayDialog("Info", "해당 폴더에 프리팹 또는 스프라이트가 없습니다.", "OK");
                 return;
             }
 
-            GameObject[] loaded = new GameObject[guids.Length];
-            for (int i = 0; i < guids.Length; i++)
+            List<Object> loaded = new List<Object>();
+            foreach (string guid in guidSet)
             {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
-                loaded[i] = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                Object item = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+
+                if (item == null)
+                    item = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+
+                if (item != null)
+                    loaded.Add(item);
             }
 
-            System.Array.Sort(loaded, (a, b) => string.Compare(a.name, b.name, System.StringComparison.Ordinal));
+            if (loaded.Count == 0)
+            {
+                EditorUtility.DisplayDialog("Info", "로드할 수 있는 프리팹 또는 스프라이트가 없습니다.", "OK");
+                return;
+            }
 
-            prefabs = loaded;
+            loaded.Sort((a, b) => string.Compare(a.name, b.name, System.StringComparison.Ordinal));
+
+            items = loaded.ToArray();
             serializedWindow.Update();
         }
     }

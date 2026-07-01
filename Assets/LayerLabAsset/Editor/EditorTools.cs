@@ -154,7 +154,14 @@ namespace LayerLabAsset
         }
 
         private const string RegenerateGuidsMenuPath = "LayerLabAsset/Regenerate Selected Asset GUIDs";
-        private static readonly Regex MetaGuidRegex = new Regex("^guid: [0-9a-fA-F]{32}$", RegexOptions.Multiline | RegexOptions.Compiled);
+        private static readonly Regex MetaGuidRegex = new Regex("^guid: (?<guid>[0-9a-fA-F]{32})$", RegexOptions.Multiline | RegexOptions.Compiled);
+        private static readonly HashSet<string> GuidReferenceExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".anim", ".asmdef", ".asmref", ".asset", ".compute", ".controller", ".cs", ".cginc",
+            ".hlsl", ".inputactions", ".json", ".mat", ".mask", ".meta", ".overridecontroller",
+            ".playable", ".prefab", ".shader", ".shadergraph", ".shadersubgraph", ".txt", ".unity",
+            ".uss", ".uxml", ".vfx"
+        };
 
         [MenuItem(RegenerateGuidsMenuPath, false, 150)]
         static public void RegenerateSelectedAssetGuids()
@@ -169,7 +176,7 @@ namespace LayerLabAsset
 
             bool confirmed = EditorUtility.DisplayDialog(
                 "GUID 갱신 확인",
-                $"선택한 대상에서 {assetPaths.Count}개 파일 asset의 GUID를 새로 생성합니다.\n\n기존 scene, prefab, material, ScriptableObject 등이 이 asset을 참조하고 있다면 연결이 끊길 수 있습니다. 계속할까요?",
+                $"선택한 대상에서 {assetPaths.Count}개 파일 asset의 GUID를 새로 생성합니다.\n\nAssets와 ProjectSettings 아래 텍스트 파일의 기존 GUID 참조도 새 GUID로 함께 치환합니다. 계속할까요?",
                 "GUID 갱신",
                 "취소");
 
@@ -180,6 +187,7 @@ namespace LayerLabAsset
 
             int updatedCount = 0;
             int skippedCount = 0;
+            Dictionary<string, string> guidReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             AssetDatabase.StartAssetEditing();
 
@@ -187,8 +195,9 @@ namespace LayerLabAsset
             {
                 foreach (string assetPath in assetPaths)
                 {
-                    if (RegenerateAssetGuid(assetPath))
+                    if (RegenerateAssetGuid(assetPath, out string oldGuid, out string newGuid))
                     {
+                        guidReplacements[oldGuid] = newGuid;
                         updatedCount++;
                     }
                     else
@@ -200,10 +209,25 @@ namespace LayerLabAsset
             finally
             {
                 AssetDatabase.StopAssetEditing();
+            }
+
+            int referenceFileCount = 0;
+            int referenceReplaceCount = 0;
+
+            try
+            {
+                if (guidReplacements.Count > 0)
+                {
+                    UpdateGuidReferences(guidReplacements, out referenceFileCount, out referenceReplaceCount);
+                }
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
                 AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             }
 
-            Debug.Log($"GUID 갱신 완료 - 갱신: {updatedCount}개, 건너뜀: {skippedCount}개");
+            Debug.Log($"GUID 갱신 완료 - 갱신: {updatedCount}개, 건너뜀: {skippedCount}개, 참조 수정 파일: {referenceFileCount}개, 참조 치환: {referenceReplaceCount}개");
         }
 
         [MenuItem(RegenerateGuidsMenuPath, true)]
@@ -258,8 +282,10 @@ namespace LayerLabAsset
             return sortedPaths;
         }
 
-        private static bool RegenerateAssetGuid(string assetPath)
+        private static bool RegenerateAssetGuid(string assetPath, out string oldGuid, out string newGuid)
         {
+            oldGuid = null;
+            newGuid = null;
             string metaPath = assetPath + ".meta";
 
             if (!File.Exists(metaPath))
@@ -269,17 +295,113 @@ namespace LayerLabAsset
             }
 
             string metaText = File.ReadAllText(metaPath, Encoding.UTF8);
+            Match guidMatch = MetaGuidRegex.Match(metaText);
 
-            if (!MetaGuidRegex.IsMatch(metaText))
+            if (!guidMatch.Success)
             {
                 Debug.LogWarning($"메타 파일에서 GUID를 찾을 수 없어 갱신을 건너뜁니다: {assetPath}");
                 return false;
             }
 
-            string newGuid = GUID.Generate().ToString();
+            oldGuid = guidMatch.Groups["guid"].Value;
+            newGuid = GUID.Generate().ToString();
             string updatedMetaText = MetaGuidRegex.Replace(metaText, "guid: " + newGuid, 1);
             File.WriteAllText(metaPath, updatedMetaText, new UTF8Encoding(false));
             return true;
+        }
+
+        private static void UpdateGuidReferences(Dictionary<string, string> guidReplacements, out int modifiedFileCount, out int replacementCount)
+        {
+            modifiedFileCount = 0;
+            replacementCount = 0;
+
+            List<string> referenceFiles = GetGuidReferenceFiles();
+
+            for (int i = 0; i < referenceFiles.Count; i++)
+            {
+                string path = referenceFiles[i];
+                EditorUtility.DisplayProgressBar("GUID 참조 갱신", path, referenceFiles.Count == 0 ? 1f : (float)i / referenceFiles.Count);
+
+                string text;
+                try
+                {
+                    text = File.ReadAllText(path, Encoding.UTF8);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogWarning($"GUID 참조 파일을 읽을 수 없어 건너뜁니다: {path}\n{exception.Message}");
+                    continue;
+                }
+
+                int fileReplacementCount = 0;
+                string updatedText = ReplaceGuidReferences(text, guidReplacements, ref fileReplacementCount);
+
+                if (fileReplacementCount == 0)
+                    continue;
+
+                try
+                {
+                    File.WriteAllText(path, updatedText, new UTF8Encoding(false));
+                    modifiedFileCount++;
+                    replacementCount += fileReplacementCount;
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogWarning($"GUID 참조 파일을 쓸 수 없어 건너뜁니다: {path}\n{exception.Message}");
+                }
+            }
+        }
+
+        private static List<string> GetGuidReferenceFiles()
+        {
+            List<string> files = new List<string>();
+            AddGuidReferenceFiles(files, "Assets");
+            AddGuidReferenceFiles(files, "ProjectSettings");
+            files.Sort(StringComparer.Ordinal);
+            return files;
+        }
+
+        private static void AddGuidReferenceFiles(List<string> files, string rootPath)
+        {
+            if (!Directory.Exists(rootPath))
+                return;
+
+            foreach (string filePath in Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories))
+            {
+                string normalizedPath = filePath.Replace('\\', '/');
+
+                if (ShouldScanGuidReferenceFile(normalizedPath))
+                    files.Add(normalizedPath);
+            }
+        }
+
+        private static bool ShouldScanGuidReferenceFile(string path)
+        {
+            string extension = Path.GetExtension(path);
+            return !string.IsNullOrEmpty(extension) && GuidReferenceExtensions.Contains(extension);
+        }
+
+        private static string ReplaceGuidReferences(string text, Dictionary<string, string> guidReplacements, ref int replacementCount)
+        {
+            string updatedText = text;
+            int totalReplacementCount = replacementCount;
+
+            foreach (KeyValuePair<string, string> replacement in guidReplacements)
+            {
+                string oldGuidPattern = Regex.Escape(replacement.Key);
+                updatedText = Regex.Replace(
+                    updatedText,
+                    oldGuidPattern,
+                    match =>
+                    {
+                        totalReplacementCount++;
+                        return replacement.Value;
+                    },
+                    RegexOptions.IgnoreCase);
+            }
+
+            replacementCount = totalReplacementCount;
+            return updatedText;
         }
 
         private static bool IsEditableAssetPath(string path)
