@@ -6,10 +6,23 @@ namespace LayerLabAsset
 {
     public class Create2DWorldGridItemWindow : EditorWindow
     {
+        private enum GridFillOrder
+        {
+            Horizontal,
+            Vertical
+        }
+
+        private static readonly GUIContent[] FillOrderOptions =
+        {
+            new GUIContent("Horizontal First", "왼쪽에서 오른쪽으로 채운 뒤 다음 줄로 내려갑니다."),
+            new GUIContent("Vertical First", "위에서 아래로 채운 뒤 다음 열로 이동합니다.")
+        };
+
         [SerializeField] private Vector2 cellSize = new Vector2(1f, 1f);
         [SerializeField] private Vector2 spacing = new Vector2(0.1f, 0.1f);
         [SerializeField] private int columns = 4;
         [SerializeField] private int rows = 3;
+        [SerializeField] private GridFillOrder fillOrder = GridFillOrder.Horizontal;
 
         [SerializeField] private Object itemFolder;
         [SerializeField] private Object[] items = new Object[0];
@@ -55,6 +68,10 @@ namespace LayerLabAsset
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Fill Order");
+            fillOrder = (GridFillOrder)GUILayout.Toolbar((int)fillOrder, FillOrderOptions);
+            EditorGUILayout.EndHorizontal();
 
             // --- Items ---
             EditorGUILayout.Space(10);
@@ -140,8 +157,7 @@ namespace LayerLabAsset
                     if (!IsSupportedItem(item)) continue;
 
                     int localIndex = i - startIndex;
-                    int col = localIndex % columns;
-                    int row = localIndex / columns;
+                    GetGridPosition(localIndex, out int col, out int row);
 
                     Vector3 itemLocalPos = new Vector3(
                         (col - (columns - 1) * 0.5f) * (cellSize.x + spacing.x),
@@ -151,6 +167,19 @@ namespace LayerLabAsset
                     CreateItem(groupObj.transform, item, itemLocalPos);
                 }
             }
+        }
+
+        private void GetGridPosition(int index, out int col, out int row)
+        {
+            if (fillOrder == GridFillOrder.Vertical)
+            {
+                col = index / rows;
+                row = index % rows;
+                return;
+            }
+
+            col = index % columns;
+            row = index / columns;
         }
 
         private GameObject CreateGroup(Transform parent, int groupIndex, Vector3 localPos)

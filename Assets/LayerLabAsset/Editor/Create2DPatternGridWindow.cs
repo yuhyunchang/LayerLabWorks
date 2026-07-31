@@ -5,9 +5,22 @@ namespace LayerLabAsset
 {
     public class Create2DPatternGridWindow : EditorWindow
     {
+        private enum GridFillOrder
+        {
+            Horizontal,
+            Vertical
+        }
+
+        private static readonly GUIContent[] FillOrderOptions =
+        {
+            new GUIContent("Horizontal First", "왼쪽에서 오른쪽으로 채운 뒤 다음 줄로 내려갑니다."),
+            new GUIContent("Vertical First", "위에서 아래로 채운 뒤 다음 열로 이동합니다.")
+        };
+
         [SerializeField] private Vector2 spacing = new Vector2(1f, 1f);
         [SerializeField] private int columns = 10;
         [SerializeField] private int rows = 10;
+        [SerializeField] private GridFillOrder fillOrder = GridFillOrder.Horizontal;
         [SerializeField] private Vector3 groupRotation = Vector3.zero;
         [SerializeField] private Vector2 scrollVelocity = new Vector2(-1f, 1f);
         [SerializeField] private bool playInEditMode = false;
@@ -52,6 +65,10 @@ namespace LayerLabAsset
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = Mathf.Max(1, EditorGUILayout.IntField("Columns", columns));
             rows = Mathf.Max(1, EditorGUILayout.IntField("Rows", rows));
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Fill Order");
+            fillOrder = (GridFillOrder)GUILayout.Toolbar((int)fillOrder, FillOrderOptions);
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Group Transform", EditorStyles.boldLabel);
@@ -142,8 +159,7 @@ namespace LayerLabAsset
                 GameObject prefab = prefabs[i % prefabs.Length];
                 if (prefab == null) continue;
 
-                int col = i % columns;
-                int row = i / columns;
+                GetGridPosition(i, out int col, out int row);
 
                 Vector3 itemLocalPos = new Vector3(
                     (col - (columns - 1) * 0.5f) * pitchX,
@@ -158,6 +174,19 @@ namespace LayerLabAsset
 
             var scroller = groupObj.AddComponent<PatternGridScroller>();
             scroller.Configure(columns, rows, pitchX, pitchY, scrollVelocity, playInEditMode);
+        }
+
+        private void GetGridPosition(int index, out int col, out int row)
+        {
+            if (fillOrder == GridFillOrder.Vertical)
+            {
+                col = index / rows;
+                row = index % rows;
+                return;
+            }
+
+            col = index % columns;
+            row = index / columns;
         }
 
         private static void CenterGroupByRendererBounds(GameObject group)

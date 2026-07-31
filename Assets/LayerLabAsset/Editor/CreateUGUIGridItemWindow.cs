@@ -6,10 +6,23 @@ namespace LayerLabAsset
 {
     public class CreateUGUIGridItemWindow : EditorWindow
     {
+        private enum GridFillOrder
+        {
+            Horizontal,
+            Vertical
+        }
+
+        private static readonly GUIContent[] FillOrderOptions =
+        {
+            new GUIContent("Horizontal First", "왼쪽에서 오른쪽으로 채운 뒤 다음 줄로 내려갑니다."),
+            new GUIContent("Vertical First", "위에서 아래로 채운 뒤 다음 열로 이동합니다.")
+        };
+
         [SerializeField] private Vector2 iconSize = new Vector2(100f, 100f);
         [SerializeField] private Vector2 spacing = new Vector2(10f, 10f);
         [SerializeField] private int columns = 4;
         [SerializeField] private int rows = 3;
+        [SerializeField] private GridFillOrder fillOrder = GridFillOrder.Horizontal;
 
         [SerializeField] private Object spriteFolder;
         [SerializeField] private Sprite[] sprites = new Sprite[0];
@@ -60,6 +73,10 @@ namespace LayerLabAsset
             spacing = EditorGUILayout.Vector2Field("Spacing", spacing);
             columns = EditorGUILayout.IntField("Columns", columns);
             rows = EditorGUILayout.IntField("Rows", rows);
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Fill Order");
+            fillOrder = (GridFillOrder)GUILayout.Toolbar((int)fillOrder, FillOrderOptions);
+            EditorGUILayout.EndHorizontal();
 
             // --- Sprites ---
             EditorGUILayout.Space(10);
@@ -172,8 +189,13 @@ namespace LayerLabAsset
             GridLayoutGroup grid = groupObj.AddComponent<GridLayoutGroup>();
             grid.cellSize = iconSize;
             grid.spacing = spacing;
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = columns;
+            grid.startAxis = fillOrder == GridFillOrder.Horizontal
+                ? GridLayoutGroup.Axis.Horizontal
+                : GridLayoutGroup.Axis.Vertical;
+            grid.constraint = fillOrder == GridFillOrder.Horizontal
+                ? GridLayoutGroup.Constraint.FixedColumnCount
+                : GridLayoutGroup.Constraint.FixedRowCount;
+            grid.constraintCount = fillOrder == GridFillOrder.Horizontal ? columns : rows;
             grid.childAlignment = TextAnchor.UpperLeft;
 
             ContentSizeFitter fitter = groupObj.AddComponent<ContentSizeFitter>();
